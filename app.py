@@ -1,57 +1,46 @@
 from flask import Flask, render_template, request, redirect
-import pyodbc
+import mysql.connector
 
 app = Flask(__name__)
 
-conn = pyodbc.connect(
-    'DRIVER={MySQL ODBC 8.0 ANSI Driver};'
-    'SERVER=localhost;'
-    'DATABASE=college;'
-    'USER=root;'
-    'PASSWORD=parth1611;'
-)
-cursor = conn.cursor()
+# ✅ Database connection function
+def get_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="parth",           # your MySQL username
+        password="parth1611",  # 🔹 replace with your MySQL password
+        database="company"
+    )
 
+# 🏠 Home Page
 @app.route('/')
-def index():
-    cursor.execute("SELECT * FROM students")
+def home():
+    return render_template('index.html')
+
+# ➕ Add Employee Page
+@app.route('/add', methods=['GET', 'POST'])
+def add_employee():
+    if request.method == 'POST':
+        name = request.form['name']
+        age = request.form['age']
+        email = request.form['email']
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO employees (name, age, email) VALUES (%s, %s, %s)", (name, age, email))
+        conn.commit()
+        conn.close()
+        return redirect('/view')
+    return render_template('add_employee.html')
+
+# 👁️ View Employees Page
+@app.route('/view')
+def view_employee():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM employees")
     data = cursor.fetchall()
-    return render_template('index.html', data=data)
-
-@app.route('/add')
-def add():
-    return render_template('add.html')
-
-@app.route('/insert', methods=['POST'])
-def insert():
-    roll = request.form['roll']
-    name = request.form['name']
-    course = request.form['course']
-    marks = request.form['marks']
-    cursor.execute("INSERT INTO students VALUES (?, ?, ?, ?)", (roll, name, course, marks))
-    conn.commit()
-    return redirect('/')
-
-@app.route('/edit/<int:roll>')
-def edit(roll):
-    cursor.execute("SELECT * FROM students WHERE roll_no = ?", (roll,))
-    data = cursor.fetchone()
-    return render_template('edit.html', student=data)
-
-@app.route('/update/<int:roll>', methods=['POST'])
-def update(roll):
-    name = request.form['name']
-    course = request.form['course']
-    marks = request.form['marks']
-    cursor.execute("UPDATE students SET name=?, course=?, marks=? WHERE roll_no=?", (name, course, marks, roll))
-    conn.commit()
-    return redirect('/')
-
-@app.route('/delete/<int:roll>')
-def delete(roll):
-    cursor.execute("DELETE FROM students WHERE roll_no=?", (roll,))
-    conn.commit()
-    return redirect('/')
+    conn.close()
+    return render_template('view_employee.html', employees=data)
 
 if __name__ == '__main__':
     app.run(debug=True)
