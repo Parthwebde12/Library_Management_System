@@ -17,12 +17,13 @@ This project allows users to **add, view, update, and delete books** in the libr
 
 ## 📂 Project Structure
 
+```text
 DBMS_Mini_Project/
 │
 ├── app.py           # Tkinter GUI for library management
 ├── operations.py    # Database operations (CRUD) using SQLite
 └── library.db       # SQLite database file (auto-created on first run)
-
+```
 ---
 
 ## ⚡ Features
@@ -49,3 +50,4 @@ DBMS_Mini_Project/
 
 ```bash
 python app.py
+
