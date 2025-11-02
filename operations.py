@@ -1,53 +1,55 @@
 import sqlite3
-import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "library.db")
-
-# module-level connection + cursor (file created if missing)
-conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-cursor = conn.cursor()
-
-# ensure table exists
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS books (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    author TEXT,
-    year INTEGER
-)
-""")
-conn.commit()
-
-def add_book(title, author, year):
-    """Insert a book and return the inserted row id."""
-    cursor.execute(
-        "INSERT INTO books (title, author, year) VALUES (?, ?, ?)",
-        (title, author, int(year))
-    )
+# --- Create database and table ---
+def connect_db():
+    conn = sqlite3.connect("library.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS books (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            author TEXT,
+            year TEXT,
+            isbn TEXT
+        )
+    """)
     conn.commit()
-    return cursor.lastrowid
+    conn.close()
 
+# --- Add a new book ---
+def add_book(title, author, year, isbn):
+    conn = sqlite3.connect("library.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO books (title, author, year, isbn) VALUES (?, ?, ?, ?)",
+                   (title, author, year, isbn))
+    conn.commit()
+    conn.close()
+
+# --- View all books ---
 def view_books():
-    """Return list of tuples (id, title, author, year)."""
-    cursor.execute("SELECT id, title, author, year FROM books")
-    return cursor.fetchall()
+    conn = sqlite3.connect("library.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM books")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
 
-def get_book(book_id):
-    """Return a single book tuple or None."""
-    cursor.execute("SELECT id, title, author, year FROM books WHERE id = ?", (book_id,))
-    return cursor.fetchone()
-
+# --- Delete a book by ID ---
 def delete_book(book_id):
-    """Delete by id; return number of deleted rows."""
-    cursor.execute("DELETE FROM books WHERE id = ?", (book_id,))
+    conn = sqlite3.connect("library.db")
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM books WHERE id=?", (book_id,))
     conn.commit()
-    return cursor.rowcount
+    conn.close()
 
-def update_book(book_id, title, author, year):
-    """Update a book; return number of updated rows."""
-    cursor.execute(
-        "UPDATE books SET title = ?, author = ?, year = ? WHERE id = ?",
-        (title, author, int(year), book_id)
-    )
+# --- Update a book by ID ---
+def update_book(book_id, title, author, year, isbn):
+    conn = sqlite3.connect("library.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE books
+        SET title=?, author=?, year=?, isbn=?
+        WHERE id=?
+    """, (title, author, year, isbn, book_id))
     conn.commit()
-    return cursor.rowcount
+    conn.close()

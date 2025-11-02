@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+r<<<<<<< HEAD
 # 📚 Library Management System (Mini DBMS Project)
 
 A simple **Library Management System** built for a DBMS mini project using **Python Tkinter GUI** and **SQLite** database.  

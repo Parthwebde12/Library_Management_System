@@ -1,223 +1,90 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from operations import add_book, view_books, delete_book, update_book, get_book
+from tkinter import messagebox
+from operations import connect_db, add_book, view_books, delete_book, update_book
 
-# ---------------- Config ----------------
-BG = "#f7f9fc"
-ACCENT = "#2b6cb0"
-FONT = ("Segoe UI", 10)
-TITLE_FONT = ("Segoe UI", 18, "bold")
-
-# ---------------- App ----------------
+# ---------- Window Setup ----------
 root = tk.Tk()
-root.title("Library Management System")
-root.geometry("850x600")
-root.configure(bg=BG)
-root.resizable(True, True)
+root.title("📚 Simple Library Management")
+root.geometry("500x450")
+root.config(bg="#f7f7f7")
 
-# ---------------- State ----------------
-editing_id = None  # None when adding, set to id when editing
-
-# ---------------- Functions ----------------
-def show_status(msg):
-    status_var.set(msg)
-
-def get_all_books():
-    try:
-        return list(view_books())
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to fetch books:\n{e}")
-        return []
-
-def refresh_table(filtered=None):
-    for r in tree.get_children():
-        tree.delete(r)
-    books = filtered if filtered is not None else get_all_books()
-    for book in books:
-        tree.insert("", "end", values=book)
-    show_status(f"{len(books)} books displayed")
-
-def clear_form():
-    global editing_id
-    editing_id = None
-    title_var.set("")
-    author_var.set("")
-    year_var.set("")
-    search_var.set("")
-    title_entry.focus_set()
-    submit_btn.config(text="Add Book")
-
-def validate_inputs(title, author, year):
-    if not title.strip() or not author.strip() or not year.strip():
-        messagebox.showwarning("Validation", "All fields are required.")
-        return False
-    if not year.isdigit() or not (0 < int(year) <= 9999):
-        messagebox.showwarning("Validation", "Year must be a valid number (1-9999).")
-        return False
-    return True
-
-def on_submit():
-    global editing_id
-    title = title_var.get()
-    author = author_var.get()
-    year = year_var.get()
-    if not validate_inputs(title, author, year):
-        return
-    try:
-        if editing_id is None:
-            rowid = add_book(title.strip(), author.strip(), int(year))
-            show_status(f"Book added (ID {rowid}).")
-        else:
-            updated = update_book(editing_id, title.strip(), author.strip(), int(year))
-            if updated:
-                show_status(f"Book ID {editing_id} updated.")
-            else:
-                show_status(f"No changes applied to ID {editing_id}.")
-            editing_id = None
-            submit_btn.config(text="Add Book")
-        clear_form()
-        refresh_table()
-    except Exception as e:
-        messagebox.showerror("Error", f"Could not save book:\n{e}")
-
-def delete_record():
-    sel = tree.focus()
-    if not sel:
-        messagebox.showwarning("Delete", "Select a record to delete.")
-        return
-    item = tree.item(sel)
-    book_id, title = item["values"][0], item["values"][1]
-    if not messagebox.askyesno("Confirm Delete", f"Delete '{title}' (ID: {book_id})?"):
-        return
-    try:
-        deleted = delete_book(book_id)
-        if deleted:
-            refresh_table()
-            show_status("Book deleted.")
-            clear_form()
-        else:
-            messagebox.showinfo("Delete", "No record deleted.")
-    except Exception as e:
-        messagebox.showerror("Error", f"Could not delete:\n{e}")
-
-def on_row_double_click(event):
-    global editing_id
-    sel = tree.focus()
-    if not sel:
-        return
-    book_id, title, author, year = tree.item(sel)["values"]
-    # populate form for editing
-    editing_id = book_id
-    title_var.set(title)
-    author_var.set(author)
-    year_var.set(year)
-    submit_btn.config(text="Save Changes")
-    show_status(f"Editing ID {book_id}. Make changes and click 'Save Changes'.")
-
-def search_records(*_):
-    query = search_var.get().strip().lower()
-    if not query:
-        refresh_table()
-        return
-    all_books = get_all_books()
-    filtered = []
-    for b in all_books:
-        if any(query in str(field).lower() for field in b[1:]):  # ignore ID
-            filtered.append(b)
-    refresh_table(filtered)
-
-# Sorting support
-sort_col = None
-sort_reverse = False
-def sort_by(col_index):
-    global sort_col, sort_reverse
-    all_items = [tree.item(i)["values"] for i in tree.get_children()]
-    try:
-        all_items.sort(key=lambda x: (x[col_index] if x[col_index] is not None else ""), reverse=sort_reverse)
-    except Exception:
-        all_items.sort(key=lambda x: str(x[col_index]), reverse=sort_reverse)
-    sort_reverse = not sort_reverse
-    # refresh_table expects list of tuples/rows
-    refresh_table(all_items)
-
-# ---------------- Styles & Layout ----------------
-style = ttk.Style(root)
-style.theme_use("clam")
-style.configure("Treeview", font=FONT, rowheight=26, fieldbackground="white")
-style.configure("TLabel", background=BG, font=FONT)
-style.configure("TButton", font=FONT)
-style.configure("Header.TFrame", background=ACCENT)
-style.map("TButton", background=[("active", "#1f4f7a")])
-
-# Header
-header = tk.Frame(root, bg=ACCENT)
-header.pack(fill="x")
-tk.Label(header, text="📚 Library Management", font=TITLE_FONT, bg=ACCENT, fg="white", padx=12, pady=10).pack(side="left")
-
-# Main frame
-main = tk.Frame(root, bg=BG, padx=12, pady=12)
-main.pack(fill="both", expand=True)
-
-# Left: form area
-form_frame = tk.Frame(main, bg=BG)
-form_frame.grid(row=0, column=0, sticky="n", padx=(0,12))
-
+# ---------- Variables ----------
+book_id_var = tk.StringVar()
 title_var = tk.StringVar()
 author_var = tk.StringVar()
 year_var = tk.StringVar()
-search_var = tk.StringVar()
-status_var = tk.StringVar()
+isbn_var = tk.StringVar()
 
-tk.Label(form_frame, text="Title:", bg=BG).grid(row=0, column=0, sticky="w", pady=4)
-title_entry = ttk.Entry(form_frame, textvariable=title_var, width=30)
-title_entry.grid(row=0, column=1, pady=4)
+# ---------- Functions ----------
+def add_book_ui():
+    if title_var.get() == "" or author_var.get() == "":
+        messagebox.showwarning("Input Error", "Title and Author are required!")
+        return
+    add_book(title_var.get(), author_var.get(), year_var.get(), isbn_var.get())
+    messagebox.showinfo("Success", "Book added successfully!")
+    clear_fields()
+    view_books_ui()
 
-tk.Label(form_frame, text="Author:", bg=BG).grid(row=1, column=0, sticky="w", pady=4)
-author_entry = ttk.Entry(form_frame, textvariable=author_var, width=30)
-author_entry.grid(row=1, column=1, pady=4)
+def view_books_ui():
+    text_area.delete(1.0, tk.END)
+    books = view_books()
+    for book in books:
+        text_area.insert(tk.END, f"ID: {book[0]} | {book[1]} by {book[2]} ({book[3]}) | ISBN: {book[4]}\n")
 
-tk.Label(form_frame, text="Year:", bg=BG).grid(row=2, column=0, sticky="w", pady=4)
-year_entry = ttk.Entry(form_frame, textvariable=year_var, width=30)
-year_entry.grid(row=2, column=1, pady=4)
+def delete_book_ui():
+    if book_id_var.get() == "":
+        messagebox.showwarning("Input Error", "Enter Book ID to delete!")
+        return
+    delete_book(book_id_var.get())
+    messagebox.showinfo("Deleted", "Book deleted successfully!")
+    clear_fields()
+    view_books_ui()
 
-btn_frame = tk.Frame(form_frame, bg=BG)
-btn_frame.grid(row=3, column=0, columnspan=2, pady=(10,0))
-submit_btn = ttk.Button(btn_frame, text="Add Book", command=on_submit)
-submit_btn.pack(side="left", padx=4)
-ttk.Button(btn_frame, text="Delete Selected", command=delete_record).pack(side="left", padx=4)
-ttk.Button(btn_frame, text="Clear", command=clear_form).pack(side="left", padx=4)
-ttk.Button(btn_frame, text="Refresh", command=refresh_table).pack(side="left", padx=4)
+def update_book_ui():
+    if book_id_var.get() == "":
+        messagebox.showwarning("Input Error", "Enter Book ID to update!")
+        return
+    update_book(book_id_var.get(), title_var.get(), author_var.get(), year_var.get(), isbn_var.get())
+    messagebox.showinfo("Updated", "Book updated successfully!")
+    clear_fields()
+    view_books_ui()
 
-# Right: table & search
-right_frame = tk.Frame(main, bg=BG)
-right_frame.grid(row=0, column=1, sticky="nsew")
-main.grid_columnconfigure(1, weight=1)
-main.grid_rowconfigure(0, weight=1)
+def clear_fields():
+    book_id_var.set("")
+    title_var.set("")
+    author_var.set("")
+    year_var.set("")
+    isbn_var.set("")
 
-search_box = ttk.Entry(right_frame, textvariable=search_var, width=40)
-search_box.pack(anchor="ne")
-search_box.bind("<KeyRelease>", search_records)
+# ---------- Labels and Entries ----------
+tk.Label(root, text="Book ID:", bg="#f7f7f7").grid(row=0, column=0, padx=10, pady=5, sticky="w")
+tk.Entry(root, textvariable=book_id_var, width=25).grid(row=0, column=1, pady=5)
 
-columns = ("ID", "Title", "Author", "Year")
-tree = ttk.Treeview(right_frame, columns=columns, show="headings", selectmode="browse")
-for i, col in enumerate(columns):
-    tree.heading(col, text=col, command=lambda c=i: sort_by(c))
-    tree.column(col, anchor="w", width=120 if col != "Title" else 300)
+tk.Label(root, text="Title:", bg="#f7f7f7").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+tk.Entry(root, textvariable=title_var, width=25).grid(row=1, column=1, pady=5)
 
-vsb = ttk.Scrollbar(right_frame, orient="vertical", command=tree.yview)
-tree.configure(yscrollcommand=vsb.set)
-vsb.pack(side="right", fill="y")
-tree.pack(fill="both", expand=True, pady=(6,0))
+tk.Label(root, text="Author:", bg="#f7f7f7").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+tk.Entry(root, textvariable=author_var, width=25).grid(row=2, column=1, pady=5)
 
-tree.bind("<Double-1>", on_row_double_click)
+tk.Label(root, text="Year:", bg="#f7f7f7").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+tk.Entry(root, textvariable=year_var, width=25).grid(row=3, column=1, pady=5)
 
-# Status bar
-status = ttk.Label(root, textvariable=status_var, anchor="w", background="#e9eef6", font=("Segoe UI", 9))
-status.pack(fill="x", side="bottom")
+tk.Label(root, text="ISBN:", bg="#f7f7f7").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+tk.Entry(root, textvariable=isbn_var, width=25).grid(row=4, column=1, pady=5)
 
-# ---------------- Initialize ----------------
-clear_form()
-refresh_table()
-show_status("Ready")
+# ---------- Buttons ----------
+tk.Button(root, text="Add Book", width=15, command=add_book_ui, bg="#d0f0c0").grid(row=5, column=0, pady=10)
+tk.Button(root, text="View All", width=15, command=view_books_ui, bg="#add8e6").grid(row=5, column=1, pady=10)
+tk.Button(root, text="Update Book", width=15, command=update_book_ui, bg="#ffb6c1").grid(row=6, column=0, pady=5)
+tk.Button(root, text="Delete Book", width=15, command=delete_book_ui, bg="#ff7f7f").grid(row=6, column=1, pady=5)
+tk.Button(root, text="Clear Fields", width=15, command=clear_fields, bg="#e0e0e0").grid(row=7, column=0, columnspan=2, pady=5)
+
+# ---------- Text Area ----------
+text_area = tk.Text(root, height=10, width=55)
+text_area.grid(row=8, column=0, columnspan=2, padx=10, pady=10)
+
+# ---------- Initialize ----------
+connect_db()
+view_books_ui()
 
 root.mainloop()
