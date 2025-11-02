@@ -1,106 +1,39 @@
+<<<<<<< HEAD
 r<<<<<<< HEAD
 # 📚 Library Management System (Mini DBMS Project)
-
-A simple **Library Management System** built for a DBMS mini project using **Python Tkinter GUI** and **SQLite** database.  
-This project allows users to **add, view, update, and delete books** in the library.
-
----
-
-## 🛠️ Tech Stack
-
-- **Frontend:** Python Tkinter GUI  
-- **Backend/Database:** SQLite (built-in Python library)  
-- **Python Version:** 3.x  
-
-> ✅ Note: Originally we considered MySQL + ODBC, but for simplicity and portability, we switched to SQLite. No external database setup required.
-
----
-
-## 📂 Project Structure
-
-DBMS_Mini_Project/
-│
-├── app.py           # Tkinter GUI for library management
-├── operations.py    # Database operations (CRUD) using SQLite
-└── library.db       # SQLite database file (auto-created on first run)
-
----
-
-## ⚡ Features
-
-1. **Add Book** – Add a new book with Title, Author, and Year.  
-2. **View Books** – Display all books in a table.  
-3. **Update Book** – Edit existing book details.  
-4. **Delete Book** – Remove books from the database.  
-5. **Portable** – SQLite DB means no installation or server needed.
-
----
-
-## 🖥️ Screenshots
-
-
----
-
-## 🚀 How to Run
-
-1. Clone or download this repository.  
-2. Make sure Python 3.x is installed.  
-3. Open terminal or CMD in project folder:
-
-```bash
-python app.py
 =======
-# 📚 Library Management System (Mini DBMS Project)
+# 🗃️ DBMS Mini Project using SQLite and Python
+>>>>>>> eb1bea7ad80dd62ee4e80fd0a2d254d9fafaf7c7
 
-A simple **Library Management System** built for a DBMS mini project using **Python Tkinter GUI** and **SQLite** database.  
-This project allows users to **add, view, update, and delete books** in the library.
-
----
-
-## 🛠️ Tech Stack
-
-- **Frontend:** Python Tkinter GUI  
-- **Backend/Database:** SQLite (built-in Python library)  
-- **Python Version:** 3.x  
-
-> ✅ Note: Originally we considered MySQL + ODBC, but for simplicity and portability, we switched to SQLite. No external database setup required.
+This project is a **Database Management System (DBMS) mini project** built using **Python** and **SQLite**.  
+It demonstrates how to create, connect, and manage a relational database using SQL queries within a Python program.
 
 ---
 
-## 📂 Project Structure
+## ⚙️ Features
 
-```text
-DBMS_Mini_Project/
-│
-├── app.py           # Tkinter GUI for library management
-├── operations.py    # Database operations (CRUD) using SQLite
-└── library.db       # SQLite database file (auto-created on first run)
-```
----
-
-## ⚡ Features
-
-1. **Add Book** – Add a new book with Title, Author, and Year.  
-2. **View Books** – Display all books in a table.  
-3. **Update Book** – Edit existing book details.  
-4. **Delete Book** – Remove books from the database.  
-5. **Portable** – SQLite DB means no installation or server needed.
+- Create, Read, Update, and Delete (CRUD) operations  
+- SQLite database integration (lightweight & serverless)  
+- Simple command-line interface for user interaction  
+- Python-based database connectivity using `sqlite3` module  
+- Well-structured code and modular functions  
 
 ---
 
-## 🖥️ Screenshots
+## 🧠 Tech Stack
 
-
+| Component | Technology |
+|------------|-------------|
+| Programming Language | Python |
+| Database | SQLite |
+| IDE / Tools | VS Code, DB Browser for SQLite |
 
 ---
 
 ## 🚀 How to Run
 
-1. Clone or download this repository.  
-2. Make sure Python 3.x is installed.  
-3. Open terminal or CMD in project folder:
-
-```bash
-python app.py
-
->>>>>>> ff0b59f91f75262cfaa0c4a845b3c2bc2fc9b258
+1. Clone the repository  
+   ```bash
+   git clone https://github.com/Parthwebde12/DBMS-mini-Project.git
+   cd DBMS-mini-Project
+  done run okay
