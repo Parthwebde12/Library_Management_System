@@ -2,134 +2,125 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import db_ops
 
-# ----------------- Root Window -----------------
-root = tk.Tk()
-root.title("📚 Library Management System")
-root.geometry("950x550")
-root.configure(bg="#0f172a")  # Dark navy blue background
+# ----------- FUNCTIONS -----------
+def refresh_books():
+    try:
+        books = db_ops.view_books()
+        for row in tree.get_children():
+            tree.delete(row)
+        for book in books:
+            tree.insert("", "end", values=book)
+        status_var.set("✅ Books loaded successfully.")
+    except Exception as e:
+        status_var.set(f"❌ Database connection error: {e}")
 
-# ----------------- Style Config -----------------
-style = ttk.Style()
-style.theme_use("clam")
-
-style.configure("Treeview",
-                background="#1e293b",
-                foreground="white",
-                rowheight=28,
-                fieldbackground="#1e293b",
-                font=("Segoe UI", 11))
-style.configure("Treeview.Heading",
-                background="#334155",
-                foreground="white",
-                font=("Segoe UI", 11, "bold"))
-style.map("Treeview",
-          background=[("selected", "#2563eb")])
-
-# ----------------- Title Bar -----------------
-title_frame = tk.Frame(root, bg="#1e293b", pady=10)
-title_frame.pack(fill="x")
-
-tk.Label(title_frame,
-         text="📚 Library Management System",
-         font=("Segoe UI", 20, "bold"),
-         fg="white",
-         bg="#1e293b").pack()
-
-# ----------------- Input Frame -----------------
-frame = tk.Frame(root, bg="#1e293b", padx=15, pady=10)
-frame.pack(pady=15, fill="x")
-
-labels = ["Title", "Author", "Year", "ISBN"]
-entries = {}
-
-for i, label in enumerate(labels):
-    tk.Label(frame, text=label, font=("Segoe UI", 12, "bold"),
-             fg="white", bg="#1e293b").grid(row=i, column=0, sticky="w", padx=10, pady=5)
-    entry = tk.Entry(frame, width=40, font=("Segoe UI", 11),
-                     bg="#334155", fg="white", insertbackground="white", relief="flat")
-    entry.grid(row=i, column=1, padx=10, pady=5, ipady=4)
-    entries[label.lower()] = entry
-
-# ----------------- Functions -----------------
 def add_book():
-    db_ops.add_book(entries["title"].get(), entries["author"].get(),
-                    entries["year"].get(), entries["isbn"].get())
-    messagebox.showinfo("Success", "Book added successfully!")
-    show_books()
-
-def show_books():
-    for row in tree.get_children():
-        tree.delete(row)
-    for row in db_ops.view_books():
-        tree.insert("", tk.END, values=row)
+    title, author, year, isbn = title_var.get(), author_var.get(), year_var.get(), isbn_var.get()
+    if not title or not author:
+        messagebox.showwarning("Input Error", "Please fill in Title and Author")
+        return
+    db_ops.add_book(title, author, year, isbn)
+    refresh_books()
+    clear_fields()
+    status_var.set("✅ Book added successfully.")
 
 def delete_book():
-    selected = tree.focus()
+    selected = tree.selection()
     if not selected:
-        messagebox.showwarning("Select", "Select a book to delete.")
+        messagebox.showwarning("Selection Error", "Please select a book to delete.")
         return
-    book_id = tree.item(selected)['values'][0]
+    book_id = tree.item(selected[0])['values'][0]
     db_ops.delete_book(book_id)
-    messagebox.showinfo("Deleted", "Book deleted successfully.")
-    show_books()
+    refresh_books()
+    clear_fields()
+    status_var.set("🗑️ Book deleted successfully.")
 
 def update_book():
-    selected = tree.focus()
+    selected = tree.selection()
     if not selected:
-        messagebox.showwarning("Select", "Select a book to update.")
+        messagebox.showwarning("Selection Error", "Select a book to update.")
         return
-    book_id = tree.item(selected)['values'][0]
-    db_ops.update_book(book_id,
-                       entries["title"].get(), entries["author"].get(),
-                       entries["year"].get(), entries["isbn"].get())
-    messagebox.showinfo("Updated", "Book updated successfully.")
-    show_books()
+    book_id = tree.item(selected[0])['values'][0]
+    db_ops.update_book(book_id, title_var.get(), author_var.get(), year_var.get(), isbn_var.get())
+    refresh_books()
+    clear_fields()
+    status_var.set("✏️ Book updated successfully.")
 
-def on_row_select(event):
-    selected = tree.focus()
-    if selected:
-        values = tree.item(selected)['values']
-        entries["title"].delete(0, tk.END)
-        entries["author"].delete(0, tk.END)
-        entries["year"].delete(0, tk.END)
-        entries["isbn"].delete(0, tk.END)
-        entries["title"].insert(0, values[1])
-        entries["author"].insert(0, values[2])
-        entries["year"].insert(0, values[3])
-        entries["isbn"].insert(0, values[4])
+def clear_fields():
+    title_var.set("")
+    author_var.set("")
+    year_var.set("")
+    isbn_var.set("")
 
-# ----------------- Buttons -----------------
-btn_frame = tk.Frame(root, bg="#0f172a")
-btn_frame.pack(pady=5)
+# ----------- UI SETUP -----------
+root = tk.Tk()
+root.title("📚 Library Management System")
+root.geometry("880x550")
+root.configure(bg="#f1f2f6")
 
-def make_button(text, cmd, color):
-    btn = tk.Button(btn_frame, text=text, command=cmd,
-                    bg=color, fg="white", font=("Segoe UI", 11, "bold"),
-                    activebackground="#1d4ed8", activeforeground="white",
-                    width=12, relief="flat", cursor="hand2")
-    btn.pack(side="left", padx=7, pady=10)
-    return btn
+# --- Fonts & Styles ---
+style = ttk.Style()
+style.theme_use("clam")
+style.configure("Treeview.Heading", font=("Segoe UI", 11, "bold"), background="#273c75", foreground="white")
+style.configure("Treeview", font=("Segoe UI", 10), rowheight=25)
+style.map("Treeview", background=[("selected", "#74b9ff")])
+style.configure("TButton", font=("Segoe UI", 10, "bold"), padding=6)
 
-make_button("Add", add_book, "#22c55e")
-make_button("View All", show_books, "#3b82f6")
-make_button("Update", update_book, "#facc15")
-make_button("Delete", delete_book, "#ef4444")
-make_button("Exit", root.destroy, "#475569")
+# --- Variables ---
+title_var, author_var, year_var, isbn_var = tk.StringVar(), tk.StringVar(), tk.StringVar(), tk.StringVar()
+status_var = tk.StringVar(value="Ready...")
 
-# ----------------- Treeview -----------------
-tree_frame = tk.Frame(root, bg="#0f172a")
-tree_frame.pack(padx=15, pady=10, fill="both", expand=True)
+# --- Header ---
+header = tk.Label(root, text="📘 Library Management System", bg="#273c75", fg="white",
+                  font=("Segoe UI", 18, "bold"), pady=12)
+header.pack(fill="x")
 
-cols = ("ID", "Title", "Author", "Year", "ISBN")
-tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
+# --- Input Frame ---
+form_frame = tk.Frame(root, bg="#dcdde1", padx=15, pady=15)
+form_frame.pack(padx=20, pady=10, fill="x")
 
-for col in cols:
+labels = [("Title", title_var), ("Author", author_var), ("Year", year_var), ("ISBN", isbn_var)]
+for i, (text, var) in enumerate(labels):
+    tk.Label(form_frame, text=text, bg="#dcdde1", font=("Segoe UI", 10, "bold")).grid(row=i//2, column=(i%2)*2, padx=10, pady=8, sticky="e")
+    tk.Entry(form_frame, textvariable=var, font=("Segoe UI", 10), width=30).grid(row=i//2, column=(i%2)*2+1, padx=10, pady=8)
+
+# --- Buttons ---
+btn_frame = tk.Frame(root, bg="#f1f2f6")
+btn_frame.pack(pady=10)
+
+btn_colors = {
+    "Add Book": "#6ab04c",
+    "Update Book": "#f9ca24",
+    "Delete Book": "#eb4d4b",
+    "Clear Fields": "#22a6b3",
+    "Refresh": "#4834d4"
+}
+
+for i, (text, color) in enumerate(btn_colors.items()):
+    action = [add_book, update_book, delete_book, clear_fields, refresh_books][i]
+    tk.Button(btn_frame, text=text, command=action, width=14, bg=color, fg="white",
+              relief="flat", font=("Segoe UI", 10, "bold"), activebackground="#130f40").grid(row=0, column=i, padx=8, pady=5)
+
+# --- TreeView (Book Table) ---
+tree_frame = tk.Frame(root, bg="#f1f2f6")
+tree_frame.pack(padx=20, pady=10, fill="both", expand=True)
+
+columns = ("ID", "Title", "Author", "Year", "ISBN")
+tree = ttk.Treeview(tree_frame, columns=columns, show="headings")
+for col in columns:
     tree.heading(col, text=col)
-    tree.column(col, anchor="center", width=150)
+    tree.column(col, anchor="center", width=150 if col != "ID" else 60)
 
-tree.bind("<ButtonRelease-1>", on_row_select)
+scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+tree.configure(yscroll=scrollbar.set)
+scrollbar.pack(side="right", fill="y")
 tree.pack(fill="both", expand=True)
 
-# ----------------- Run -----------------
-show_books()
+# --- Status Bar ---
+status_bar = tk.Label(root, textvariable=status_var, bd=1, relief="sunken", anchor="w",
+                      bg="#273c75", fg="white", font=("Segoe UI", 10, "bold"))
+status_bar.pack(side="bottom", fill="x")
+
+# --- Initialize ---
+refresh_books()
 root.mainloop()

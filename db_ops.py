@@ -1,33 +1,40 @@
-import pyodbc
+import mysql.connector
 
 def get_connection():
-    return pyodbc.connect('DSN=LibraryDSN')
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="1611",   # change if your MySQL has a password
+        database="library_db"
+    )
 
 def add_book(title, author, year, isbn):
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO books (title, author, year, isbn) VALUES (?, ?, ?, ?)", (title, author, year, isbn))
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO books (title, author, year, isbn) VALUES (%s, %s, %s, %s)", 
+                   (title, author, year, isbn))
     conn.commit()
     conn.close()
 
 def view_books():
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM books")
-    rows = cur.fetchall()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM books")
+    rows = cursor.fetchall()
     conn.close()
     return rows
 
 def delete_book(book_id):
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM books WHERE id=?", (book_id,))
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM books WHERE id=%s", (book_id,))
     conn.commit()
     conn.close()
 
 def update_book(book_id, title, author, year, isbn):
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE books SET title=?, author=?, year=?, isbn=? WHERE id=?", (title, author, year, isbn, book_id))
+    cursor = conn.cursor()
+    cursor.execute("UPDATE books SET title=%s, author=%s, year=%s, isbn=%s WHERE id=%s", 
+                   (title, author, year, isbn, book_id))
     conn.commit()
     conn.close()
