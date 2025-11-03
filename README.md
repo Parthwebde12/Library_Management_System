@@ -1,53 +1,91 @@
-# Library Management System
+# Library Management System (DBMS-mini-Project)
 
-A simple desktop Library Management application built with Python (Tkinter) and MySQL using ODBC (pyodbc).  
-This app demonstrates basic CRUD operations (Create, Read, Update, Delete) for managing books in a MySQL database with a lightweight Tkinter GUI.
+A lightweight desktop Library Management System built with Python (Tkinter) and MySQL using ODBC (pyodbc). This app provides a simple GUI for basic library CRUD operations — add, view, update, and delete books — and is intended as a DBMS mini-project or learning reference.
 
 ---
 
-## Features
+Table of contents
+- About
+- Features
+- Demo
+- Tech stack
+- Quick start
+  - Clone
+  - Dependencies
+  - Database (SQL)
+  - Configure connection (examples)
+  - Run
+- Usage (UI overview)
+- Troubleshooting
+- Security notes
+- Packaging
+- Roadmap / Improvements
+- Contributing
+- License
+- Contact
+
+---
+
+About
+This repository contains a small Tkinter application that connects to a MySQL database through an ODBC layer (pyodbc). It is designed to be simple, easy to set up, and educational — good for demonstrating database connectivity and basic GUI-driven CRUD patterns in Python.
+
+Features
 - Add new books (title, author, year, publisher, ISBN, quantity)
-- View list of books
-- Update book details
-- Delete books
-- Simple and clean Tkinter-based user interface
-- MySQL backend accessed via ODBC (pyodbc)
+- Browse and search the book list
+- Update and delete book records
+- Clean, minimal Tkinter GUI
+- Works with ODBC (DSN or DSN-less) using pyodbc
+
+Demo
+(Replace these with real screenshots or GIFs)
+- Main list view showing books
+- Add / Edit form dialog
+- Confirmation prompt for delete actions
 
 ---
 
-## Tech Stack
-- Python 3.8+  
-- Tkinter (built-in GUI toolkit)  
-- MySQL (server)  
-- ODBC driver for your OS (MySQL ODBC Driver / MySQL Connector/ODBC)  
-- pyodbc (Python ODBC package)
+Tech stack
+- Python 3.8+
+- Tkinter (GUI)
+- MySQL (database server)
+- ODBC driver for MySQL (platform-specific)
+- pyodbc (Python ODBC driver)
 
 ---
 
-## Prerequisites
+Quick start
 
-1. Python 3.8+
-2. MySQL server available and running
-3. MySQL ODBC driver installed:
-   - Windows: MySQL Connector/ODBC (install the MSI)
-   - macOS / Linux: unixODBC + MySQL ODBC driver (install via package manager)
-4. Create a System or User ODBC DSN, or use a DSN-less connection string
-5. Install Python dependency:
+1) Clone
 ```bash
+git clone https://github.com/Parthwebde12/DBMS-mini-Project.git
+cd DBMS-mini-Project
+```
+
+2) Create a virtual environment and install dependencies
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
+
+pip install -r requirements.txt
+# If there is no requirements.txt:
 pip install pyodbc
 ```
 
----
+requirements.txt (example)
+```text
+pyodbc>=4.0.30
+```
 
-## Database Setup
-
-Create a database and a simple `books` table. Example SQL:
-
+3) Create the database and table
+Connect to your MySQL server and run:
 ```sql
-CREATE DATABASE library_db;
+CREATE DATABASE IF NOT EXISTS library_db;
 USE library_db;
 
-CREATE TABLE books (
+CREATE TABLE IF NOT EXISTS books (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   author VARCHAR(255),
@@ -59,109 +97,113 @@ CREATE TABLE books (
 );
 ```
 
----
+4) Configure ODBC / DB connection
+Option A — Using a DSN (recommended for end users)
+- Create an ODBC DSN (e.g., `LibraryDSN`) using your platform's ODBC manager and point it to `library_db`.
 
-## ODBC / Connection Setup
+Option B — DSN-less connection (useful for development)
+- Replace values below with your server credentials.
 
-Option A — Using a DSN (recommended if you prefer central config):
-- Create an ODBC Data Source Name (DSN) called e.g. `LibraryDSN` pointing to your `library_db`.
-  - Windows: ODBC Data Source Administrator → Add → MySQL ODBC driver → configure.
-  - macOS/Linux: Configure `odbc.ini` / `odbcinst.ini` or use a GUI like iODBC/ODBC Manager.
-
-Option B — DSN-less connection (works cross-platform with correct driver name):
+Example config.py (create in project root)
 ```python
-import pyodbc
+# config.py
+USE_DSN = False  # set True to use DSN
 
-conn = pyodbc.connect(
+# If using DSN
+DSN = "LibraryDSN"
+DB_USER = "myuser"
+DB_PASS = "mypassword"
+
+# If using DSN-less
+DSN_LESS_CONN_STR = (
     "DRIVER={MySQL ODBC 8.0 ANSI Driver};"
     "SERVER=127.0.0.1;"
     "PORT=3306;"
     "DATABASE=library_db;"
-    "USER=myuser;"
-    "PASSWORD=mypassword;"
+    "UID=myuser;"
+    "PWD=mypassword;"
     "OPTION=3;"
 )
 ```
-If using DSN:
+
+Secure alternative: use environment variables (recommended)
 ```python
-conn = pyodbc.connect("DSN=LibraryDSN;UID=myuser;PWD=mypassword;")
+import os
+conn_str = (
+    "DRIVER={MySQL ODBC 8.0 ANSI Driver};"
+    f"SERVER={os.environ['DB_HOST']};"
+    f"PORT={os.environ.get('DB_PORT','3306')};"
+    f"DATABASE={os.environ['DB_NAME']};"
+    f"UID={os.environ['DB_USER']};"
+    f"PWD={os.environ['DB_PASS']};"
+)
 ```
 
-Notes:
-- Replace driver name if you have a different version (e.g., `MySQL ODBC 8.0 Unicode Driver`).
-- If you get driver not found errors, double-check the driver name and that the ODBC driver is properly installed.
-
----
-
-## Run the App
-
-1. Ensure MySQL is running and the `books` table exists.
-2. Configure DSN or update connection string in the app (example: `config.py` or inside `app.py`).
-3. Run:
+5) Run the app
 ```bash
 python app.py
 ```
-
-The GUI window should open and allow you to add, view, update, and delete books.
-
----
-
-## Typical Project Structure (example)
-- app.py            # Main Tkinter application
-- config.py         # (optional) DB connection configuration
-- requirements.txt  # pyodbc (if included)
-- README.md
-
-If you don't have `config.py`, check where the connection string is defined in `app.py` and update it there.
+The main window should open. Use the UI to add, edit, delete and search books.
 
 ---
 
-## Troubleshooting
+Usage (UI overview)
+- Add Book: opens a form to enter book details, then saves to DB.
+- Edit: select a book in the list and click Edit to update record.
+- Delete: select a book and click Delete. A confirmation prompt prevents accidental deletion.
+- Search / Filter: type a search term to filter displayed books (if implemented).
 
+---
+
+Troubleshooting
+- ODBC driver not found / driver name mismatch:
+  - Verify installed driver name. On Windows, check ODBC Data Source Administrator.
+  - For DSN-less, make sure the DRIVER value matches the installed driver (e.g., "MySQL ODBC 8.0 Unicode Driver").
 - pyodbc cannot connect:
-  - Verify MySQL server is running and reachable (try connecting with mysql client).
-  - Verify credentials and database name are correct.
-  - Verify the ODBC driver is installed and the driver name matches.
-  - On Linux/macOS ensure unixODBC is installed and configured.
-
+  - Test connection using the mysql client or another DB tool.
+  - Confirm user credentials and that the user has privileges on library_db.
+  - Ensure port (usually 3306) is open and accessible.
 - "Data source name not found and no default driver specified":
-  - If using DSN: ensure it exists and is defined as System/User DSN.
-  - If DSN-less: use the exact installed driver name.
-
-- Permission issues:
-  - Ensure the MySQL user has privileges on the `library_db` database.
-
----
-
-## Improvements / TODOs
-- Add search/filtering for books
-- Add user authentication
-- Input validation and better error handling
-- Export/Import (CSV)
-- Pack into an executable (PyInstaller) for distribution
+  - If using DSN: confirm the DSN exists and is the correct type (User vs System).
+  - Otherwise use DSN-less connection with a correct DRIVER string.
+- Permissions errors:
+  - Grant the MySQL user appropriate privileges: GRANT ALL on library_db.* TO 'user'@'host';
 
 ---
 
-## Contributing
-Contributions are welcome — fork the repo, add features or fixes, open a pull request. Please include:
-- A clear description of the change
-- Steps to reproduce (if relevant)
-- Any schema or migration steps required
+Security notes
+- Do not commit credentials or DSN with passwords to version control.
+- Prefer environment variables or an encrypted secret manager for production.
+- Validate user input before inserting into the database to avoid injection vulnerabilities — using parameterized queries via pyodbc prevents SQL injection.
 
 ---
 
-## License
-Specify a license for the project (e.g., MIT). Add a LICENSE file to your repo.
+Packaging
+To distribute this app on Windows, consider PyInstaller:
+```bash
+pip install pyinstaller
+pyinstaller --onefile app.py
+```
+Note: ODBC drivers must be present on the target machine — bundling them is platform-specific.
 
 ---
 
-## Contact
-Created by Parthwebde12. For questions or help, open an issue in the repository.
+Roadmap / Improvements
+- Add robust search and filtering UI
+- Pagination for large datasets
+- User authentication / multi-user roles (librarian vs member)
+- Improved validation and richer error handling
+- Import/export (CSV, JSON)
+- Unit tests & CI (GitHub Actions)
+- Desktop packaging for Windows/macOS/Linux
 
 ---
 
-If you'd like, I can:
-- generate a sample config.py that contains a DSN and DSN-less template,
-- produce the SQL migration file,
-- or create a polished requirements.txt and a basic CONTRIBUTING.md.
-Tell me which you'd like next.
+Contributing
+Contributions are welcome!
+1. Fork the repository
+2. Create a branch: git checkout -b feature/my-feature
+3. Make changes and add tests where appropriate
+4. Open a Pull Request describing your changes and rationale
+
+Please follow consistent coding style and do not commit secrets.
