@@ -4,7 +4,7 @@ def get_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="parth1611",   # I have put my sql server database you can upload yours to run it in your system
+        password="your_real_password",   # I have put my sql server database you can upload yours to run it in your system
         database="library_db"
     )
 
